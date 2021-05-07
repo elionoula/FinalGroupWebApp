@@ -76,5 +76,16 @@ def logout():
     session.pop('username', None)
     return redirect(url_for('login'))
 
+@app.route('/profile')
+def profile():
+    conn = mysql.connect()
+    cursor = conn.cursor(pymysql.cursors.DictCursor)
+    if 'loggedin' in session:
+        cursor.execute('SELECT * FROM accounts WHERE id = %s', [session['id']])
+        account = cursor.fetchone()
+        return render_template('profile.html', account=account)
+    return redirect(url_for('login'))
+
+
 if __name__ == '__main__':
     app.run(host='0.0.0.0', debug=True)
