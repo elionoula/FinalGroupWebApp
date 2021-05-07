@@ -1,7 +1,7 @@
 version: "2"
 services:
   app:
-    build: pythonglogin
+    build: pythonlogin
     container_name: "Flask_App"
     links:
       - db
@@ -11,6 +11,7 @@ services:
       - "5000:5000"
 
   db:
+    platform: linux/x86_64
     image: mysql:5.7
     container_name: "MySQL_Database"
     ports:
