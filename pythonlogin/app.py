@@ -63,6 +63,13 @@ def register():
         msg = 'Please fill out the form!'
     return render_template('register.html', msg=msg)
 
+@app.route('/')
+def home():
+    if 'loggedin' in session:
+        return render_template('home.html', username=session['username'])
+    return redirect(url_for('login'))
+
+
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', debug=True)
