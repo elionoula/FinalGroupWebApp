@@ -69,7 +69,12 @@ def home():
         return render_template('home.html', username=session['username'])
     return redirect(url_for('login'))
 
-
+@app.route('/logout')
+def logout():
+    session.pop('loggedin', None)
+    session.pop('id', None)
+    session.pop('username', None)
+    return redirect(url_for('login'))
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', debug=True)
