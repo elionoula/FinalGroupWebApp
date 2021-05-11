@@ -81,7 +81,7 @@ def register():
             cursor.execute('INSERT INTO accounts VALUES (NULL, %s, %s, %s, %s)', (fullname, username, password, email))
             conn.commit()
             msg = 'You have successfully registered!'
-            sg = sendgrid.SendGridAPIClient(api_key='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')
+            sg = sendgrid.SendGridAPIClient(os.environ.get('SENDGRID_API_KEY'))
             from_email = Email("ac295@njit.edu")  # Change to your verified sender
             to_email = To(email)  # Change to your recipient
             subject = "Verified Sign Up for IS601 Project"
