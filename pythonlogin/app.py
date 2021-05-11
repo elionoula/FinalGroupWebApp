@@ -2,6 +2,9 @@ from flask import Flask, render_template, request, redirect, url_for, session
 from flaskext.mysql import MySQL
 import pymysql
 import re
+import sendgrid
+import os
+from sendgrid.helpers.mail import Mail, Email, To, Content
 
 app = Flask(__name__)
 
@@ -18,6 +21,10 @@ mysql.init_app(app)
 
 @app.route('/pythonlogin/', methods=['GET', 'POST'])
 def login():
+    """Description: Function to login and read render the index.html page.
+                    If incorrect login information is provided will be prompted
+                    with an error message.
+    """
     conn = mysql.connect()
     cursor = conn.cursor(pymysql.cursors.DictCursor)
     msg = ''
@@ -32,11 +39,26 @@ def login():
             session['username'] = account['username']
             return redirect(url_for('home'))
         else:
-            msg = 'Incorrect username/password!'
+            msg = 'Incorrect username/password has been entered!'
     return render_template('index.html', msg=msg)
+
+
+@app.route('/')
+def home():
+    """Description: Function to render the home.html and bring you to the welcome page.
+                    If other then will be directed to the index.html file.
+    """
+    if 'loggedin' in session:
+        return render_template('home.html', username=session['username'])
+    return redirect(url_for('login'))
+
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
+    """Description: Function to register a new user to the website.
+                    If the form is filled out incorrectly it will tell the user
+                    to correctly fill it out.
+    """
     conn = mysql.connect()
     cursor = conn.cursor(pymysql.cursors.DictCursor)
     msg = ''
@@ -59,31 +81,41 @@ def register():
             cursor.execute('INSERT INTO accounts VALUES (NULL, %s, %s, %s, %s)', (fullname, username, password, email))
             conn.commit()
             msg = 'You have successfully registered!'
+            sg = sendgrid.SendGridAPIClient(api_key='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')
+            from_email = Email("ac295@njit.edu")  # Change to your verified sender
+            to_email = To(email)  # Change to your recipient
+            subject = "Verified Sign Up for IS601 Project"
+            content = Content("text/plain", "Thank you for signing up!")
+            mail = Mail(from_email, to_email, subject, content)
+            # Get a JSON-ready representation of the Mail object
+            mail_json = mail.get()
+            # Send an HTTP POST request to /mail/send
+            response = sg.client.mail.send.post(request_body=mail_json)
     elif request.method == 'POST':
         msg = 'Please fill out the form!'
     return render_template('register.html', msg=msg)
 
-@app.route('/')
-def home():
-    if 'loggedin' in session:
-        return render_template('home.html', username=session['username'])
-    return redirect(url_for('login'))
-
-@app.route('/logout')
-def logout():
-    session.pop('loggedin', None)
-    session.pop('id', None)
-    session.pop('username', None)
-    return redirect(url_for('login'))
 
 @app.route('/profile')
 def profile():
+    """Description: Function to display profile containing information
+                    regarding to each user's profile.
+    """
     conn = mysql.connect()
     cursor = conn.cursor(pymysql.cursors.DictCursor)
     if 'loggedin' in session:
         cursor.execute('SELECT * FROM accounts WHERE id = %s', [session['id']])
         account = cursor.fetchone()
         return render_template('profile.html', account=account)
+    return redirect(url_for('login'))
+
+@app.route('/logout')
+def logout():
+    """Description: Function to logout the user.
+    """
+    session.pop('loggedin', None)
+    session.pop('id', None)
+    session.pop('username', None)
     return redirect(url_for('login'))
 
 
